@@ -9,7 +9,7 @@ public class ArduinoObserver : MonoBehaviour
 
     private SerialPort serialPort;
 
-    [SerializeField] private string portName = "COM3";
+    [SerializeField] private string portName = "COM5";
     [SerializeField] private int baudRate = 9600;
     private void Awake()
     {
@@ -25,6 +25,11 @@ public class ArduinoObserver : MonoBehaviour
     }
     void Start()
     {
+        string[] ports = SerialPort.GetPortNames();
+        foreach (string port in ports)
+        {
+            Debug.Log("Puerto disponible encontrado: " + port);
+        }
         serialPort = new SerialPort(portName, baudRate);
         try
         {

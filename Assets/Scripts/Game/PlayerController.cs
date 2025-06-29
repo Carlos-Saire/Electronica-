@@ -1,47 +1,41 @@
+using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody rb;
-    private Transform mainCameraTransform;
-    private Vector2 currentInput; 
-    [SerializeField] private float moveSpeed = 5f;
+    public static event Func<Transform> OnGetCamera;
 
-    private void Awake()
+    [Header("Movement Settings")]
+    public float moveSpeed = 5f;
+    public float gravity = -9.81f;
+
+    private Transform mainCamera;
+    private CharacterController controller;
+    private Vector3 velocity;
+
+    private void Start()
     {
-        mainCameraTransform = Camera.main.transform;
-        rb = GetComponent<Rigidbody>();
+        controller = GetComponent<CharacterController>();
+        mainCamera = OnGetCamera?.Invoke();
     }
 
-    private void GetPlayerMove(Vector2 input)
+    private void Update()
     {
-        currentInput = input; 
+        MovePlayer();
     }
 
-    private void FixedUpdate()
+    private void MovePlayer()
     {
-        Vector3 forward = mainCameraTransform.forward;
-        forward.y = 0;
-        forward.Normalize();
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
 
-        Vector3 right = mainCameraTransform.right;
-        right.y = 0;
-        right.Normalize();
+        Vector3 direction = (mainCamera.right * h + mainCamera.forward * v).normalized;
+        direction.y = 0;
 
-        Vector3 moveDir = forward * currentInput.y + right * currentInput.x;
-        if (moveDir.magnitude > 1f)
-            moveDir.Normalize();
+        controller.Move(direction * moveSpeed * Time.deltaTime);
 
-        rb.linearVelocity = moveDir * moveSpeed + new Vector3(0, rb.linearVelocity.y, 0);
-    }
-
-    private void OnEnable()
-    {
-        InputReader.OnPlayerMove += GetPlayerMove;
-    }
-    private void OnDisable()
-    {
-        InputReader.OnPlayerMove -= GetPlayerMove;
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
     }
 }
